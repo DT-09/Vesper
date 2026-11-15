@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Brain, Check, Clock3, Plus, Sparkles } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import "./recall-practice.css";
 
 type RecallCard = {
@@ -20,6 +21,8 @@ export default function RecallPractice() {
   const [prompt,setPrompt] = useState(""); const [answer,setAnswer] = useState(""); const [context,setContext] = useState("");
   const [activeId,setActiveId] = useState<string|null>(null); const [revealed,setRevealed] = useState(false);
   const [showAdd,setShowAdd] = useState(false);
+  const [searchParams,setSearchParams] = useSearchParams();
+  useEffect(()=>{const p=searchParams.get("prompt"),a=searchParams.get("answer"),ctx=searchParams.get("context");if(p){setPrompt(p);setAnswer(a||"");setContext(ctx||"");setShowAdd(true);}},[searchParams]);
   useEffect(()=>{ try { localStorage.setItem(KEY,JSON.stringify(cards)); } catch { /* Browser storage can be unavailable or full. */ } },[cards]);
   const due = useMemo(()=>cards.filter(c=>c.dueAt<=today()).sort((a,b)=>a.dueAt.localeCompare(b.dueAt)||a.createdAt.localeCompare(b.createdAt)),[cards]);
   const active = due.find(c=>c.id===activeId) || due[0] || null;
@@ -29,7 +32,7 @@ export default function RecallPractice() {
     if(!prompt.trim()||!answer.trim()) return;
     const now = new Date().toISOString();
     const card:RecallCard={id:uid(),prompt:prompt.trim(),answer:answer.trim(),context:context.trim(),createdAt:now,dueAt:today(),interval:0,ease:2.5,repetitions:0,reviews:0};
-    setCards(old=>[card,...old]); setPrompt("");setAnswer("");setContext("");setShowAdd(false);setActiveId(card.id);setRevealed(false);
+    setCards(old=>[card,...old]); setPrompt("");setAnswer("");setContext("");setShowAdd(false);setActiveId(card.id);setRevealed(false);setSearchParams({});
   };
   const grade = (rating:"again"|"hard"|"good"|"easy") => {
     if(!active)return;
