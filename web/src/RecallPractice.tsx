@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Brain, Check, Clock3, Plus, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, Check, Clock3, Plus, Sparkles } from "lucide-react";
 import "./recall-practice.css";
 
 type RecallCard = {
@@ -34,9 +34,8 @@ export default function RecallPractice() {
   const grade = (rating:"again"|"hard"|"good"|"easy") => {
     if(!active)return;
     const next={...active};
-    if(rating==="again"){next.interval=0;next.repetitions=0;next.dueAt=addDays(0);next.ease=Math.max(1.3,next.ease-.2);}
+    if(rating==="again"){next.interval=1;next.repetitions=0;next.dueAt=addDays(1);next.ease=Math.max(1.3,next.ease-.2);}
     else {
-      const factors={hard:1.2,good:next.repetitions===0?1:next.repetitions===1?3:next.ease,easy:next.repetitions===0?4:next.ease*1.3};
       next.interval=rating==="hard"?Math.max(1,Math.round(Math.max(1,next.interval)*1.2)):rating==="good"?Math.max(1,Math.round(next.interval===0?1:next.interval===1?3:next.interval*next.ease)):Math.max(4,Math.round(Math.max(1,next.interval)*1.3));
       next.ease=Math.max(1.3,next.ease+(rating==="easy"?.15:rating==="hard"?-.15:0));
       next.repetitions+=1; next.dueAt=addDays(next.interval);
