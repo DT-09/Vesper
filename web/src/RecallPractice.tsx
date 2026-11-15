@@ -9,8 +9,9 @@ type RecallCard = {
   repetitions: number; reviews: number; lastGrade?: string;
 };
 const KEY = "vesper-recall-cards-v1";
-const today = () => new Date().toISOString().slice(0, 10);
-const addDays = (n: number) => { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const localDate = (d: Date) => [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+const today = () => localDate(new Date());
+const addDays = (n: number) => { const d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+n); return localDate(d); };
 const uid = () => globalThis.crypto?.randomUUID?.() || "recall-"+Date.now()+"-"+Math.random().toString(36).slice(2);
 function readCards(): RecallCard[] {
   try { const value = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(value) ? value.filter((x:any)=>x && typeof x.prompt==="string" && typeof x.answer==="string") : []; }
