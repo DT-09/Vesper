@@ -13,6 +13,7 @@ It is not a fixed course catalogue or a conventional learning-management system.
 - **Flight Paths** — editable stages for framing, learning, hypothesising, investigating, adapting, and deriving.
 - **Learn** — an explorable knowledge field spanning 14 domains, searchable subjects and concepts, three depth levels per field, open-ended inquiry prompts, and curated starting points from universities, open textbooks, research references, interactive simulations, and educational video providers. Resources open at their original providers; availability and licensing can change.
 - **Growth Studio** — six self-learning pathways covering metacognition, reasoning, research, problem-solving, communication, and systems thinking. Includes a focus timer, learner-defined goals, weekly study tracking, and transfer challenges.
+- **Recall Practice** — a dedicated active-retrieval queue for learner-authored concept prompts, reference explanations, self-rated recall, and locally scheduled spaced reviews. Recall intervals are transparent heuristics, not a validated mastery score.
 - **Inquiry-linked learning** — record concepts, explanations, and self-reported understanding inside each investigation.
 - **Investigate** — prediction and observation records, plus an interactive model bench for echo ranging, waveforms, and exponential sensitivity.
 - **Research** — source annotations and a framework for evaluating authority, method, scope, inference, and corroboration.
