@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ArrowRight, BookOpen, Brain, CheckCircle2, ChevronRight, Compass, RotateCcw, Sparkles, Target } from "lucide-react";
+import type { FormEvent } from "react";
+import { ArrowRight, Brain, CheckCircle2, ChevronRight, Sparkles, Target } from "lucide-react";
 import "./adaptive-learning.css";
 
 type Stage = "orient" | "diagnose" | "build" | "explain" | "retrieve" | "transfer" | "reflect";
@@ -45,7 +46,7 @@ export default function AdaptiveLearningStudio() {
   const next = useMemo(() => active ? recommendation(active) : null, [active]);
   const save = (nextSessions: Session[]) => { setSessions(nextSessions); try { localStorage.setItem(KEY, JSON.stringify(nextSessions)); } catch { /* Storage failure must not interrupt a learning session. */ } };
   const patch = (values: Partial<Session>) => { if (!active) return; const updated = { ...active, ...values, updatedAt: new Date().toISOString() }; save(sessions.map(s => s.id === active.id ? updated : s)); };
-  const create = (event: React.FormEvent) => { event.preventDefault(); if (!topic.trim() || !goal.trim()) return; const s = blank(topic.trim(), goal.trim()); save([s, ...sessions]); setActiveId(s.id); setTopic(""); setGoal(""); setShowCreate(false); };
+  const create = (event: FormEvent) => { event.preventDefault(); if (!topic.trim() || !goal.trim()) return; const s = blank(topic.trim(), goal.trim()); save([s, ...sessions]); setActiveId(s.id); setTopic(""); setGoal(""); setShowCreate(false); };
   const markComplete = (stage: Stage) => { if (!active) return; patch({ completed: active.completed.includes(stage) ? active.completed : [...active.completed, stage] }); };
   const currentStage = active ? stages.find(s => s.id === active.stage) || stages[0] : stages[0];
   const field = (label: string, value: string, key: keyof Session, placeholder: string, rows = 4) => (
