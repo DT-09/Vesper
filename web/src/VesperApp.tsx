@@ -22,6 +22,49 @@ type Inquiry = {
  status: "active"|"synthesised"; createdAt: string; updatedAt: string;
 };
 type Store = { version: 2; inquiries: Inquiry[]; };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+ typeof value === "object" && value !== null && !Array.isArray(value);
+const hasStrings = (value: Record<string, unknown>, keys: string[]) =>
+ keys.every(key => typeof value[key] === "string");
+function isStage(value: unknown): value is Stage {
+ return isRecord(value) && hasStrings(value, ["id","title","purpose"]) && typeof value.done === "boolean";
+}
+function isConcept(value: unknown): value is Concept {
+ return isRecord(value) && hasStrings(value, ["id","title","explanation","discipline"]) && typeof value.understood === "boolean";
+}
+function isSource(value: unknown): value is Source {
+ return isRecord(value) && hasStrings(value, ["id","title","url","kind","contribution","limitation"]);
+}
+function isObservation(value: unknown): value is Observation {
+ return isRecord(value) && hasStrings(value, ["id","prediction","method","result","interpretation","confidence"]);
+}
+function isArtifact(value: unknown): value is Artifact {
+ return isRecord(value) && hasStrings(value, ["id","title","kind","description","output","reflection"]);
+}
+function isInquiry(value: unknown): value is Inquiry {
+ if (!isRecord(value)) return false;
+ if (!hasStrings(value, ["id","title","motivation","scope","prior","hypothesis","hypothesisReason","alternatives","disconfirmingEvidence","conclusion","evidenceSummary","limitations","nextQuestions","createdAt","updatedAt"])) return false;
+ if (!["question","subject","challenge"].includes(String(value.origin))) return false;
+ if (!["active","synthesised"].includes(String(value.status))) return false;
+ return Array.isArray(value.disciplines) && value.disciplines.every(x => typeof x === "string")
+  && Array.isArray(value.route) && value.route.every(isStage)
+  && Array.isArray(value.concepts) && value.concepts.every(isConcept)
+  && Array.isArray(value.sources) && value.sources.every(isSource)
+  && Array.isArray(value.observations) && value.observations.every(isObservation)
+  && Array.isArray(value.artifacts) && value.artifacts.every(isArtifact);
+}
+function validateBackup(value: unknown): Store {
+ if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.inquiries)) {
+  throw new Error("This is not a supported Vesper discovery backup (version 2).");
+ }
+ if (value.inquiries.length > 1000) throw new Error("The backup contains more than 1,000 inquiries.");
+ const inquiries = value.inquiries;
+ if (!inquiries.every(isInquiry)) throw new Error("The backup contains an invalid or incomplete inquiry record.");
+ const ids = inquiries.map(item => item.id);
+ if (new Set(ids).size !== ids.length) throw new Error("The backup contains duplicate inquiry identifiers.");
+ return { version: 2, inquiries };
+}
 const KEY = "vesper.inquiry.v2";
 const uid = () => crypto.randomUUID?.() || "v-" + Date.now().toString(36) + Math.random().toString(36).slice(2);
 const stamp = () => new Date().toISOString();
@@ -60,7 +103,14 @@ function useVesperStore(){
  const update=(id:string,patch:Partial<Inquiry>)=>setStore(s=>({...s,inquiries:s.inquiries.map(x=>x.id===id?{...x,...patch,updatedAt:stamp()}:x)}));
  const remove=(id:string)=>setStore(s=>({...s,inquiries:s.inquiries.filter(x=>x.id!==id)}));
  const exportBackup=()=>{const blob=new Blob([JSON.stringify(store,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="vesper-discovery-backup.json";a.click();URL.revokeObjectURL(a.href);};
- const importBackup=async(file:File)=>{const parsed=JSON.parse(await file.text());if(!Array.isArray(parsed.inquiries))throw new Error("This is not a Vesper discovery backup.");setStore({version:2,inquiries:parsed.inquiries});};
+ const importBackup=async(file:File)=>{
+  if(file.size>10*1024*1024)throw new Error("Backup exceeds the 10 MB import limit.");
+  let parsed:unknown;
+  try{parsed=JSON.parse(await file.text());}
+  catch{throw new Error("The selected file is not valid JSON.");}
+  const validated=validateBackup(parsed);
+  setStore(validated);
+ };
  return {store,create,update,remove,exportBackup,importBackup};
 }
 function Shell({children,exportBackup,importBackup}:{children:React.ReactNode;exportBackup:()=>void;importBackup:(file:File)=>Promise<void>}){
